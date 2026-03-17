@@ -207,6 +207,7 @@ contract MetadataAssemblyTest is Test {
         vm.prank(minter);
         balloons.mint(customer, sampleParams);
         assertTrue(_containsInURI(0, "Ionson"));
+        assertTrue(_containsInURI(0, "Jennifer Ionson"));
     }
 
     function test_tokenURIContainsLicense() public {
@@ -248,6 +249,17 @@ contract MetadataAssemblyTest is Test {
         assertTrue(_containsInURI(0, "Rising Blue"));
         assertTrue(_containsInURI(0, "0.75"));
         assertTrue(_containsInURI(0, "NFC Lisbon 2026"));
+    }
+
+    function test_numericTraitsAreNotQuoted() public {
+        vm.prank(minter);
+        balloons.mint(customer, sampleParams); // unitNumber=42, seed=839201
+        string memory decoded = _decodeTokenURI(balloons.tokenURI(0));
+        // Numeric values must NOT be quoted in JSON
+        assertTrue(_contains(decoded, '"value":42'));
+        assertTrue(_contains(decoded, '"value":839201'));
+        // String values remain quoted
+        assertTrue(_contains(decoded, '"value":"Portrait"'));
     }
 
     // -------------------------------------------------------------------------

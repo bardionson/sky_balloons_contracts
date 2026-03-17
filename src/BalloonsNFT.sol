@@ -160,8 +160,8 @@ contract BalloonsNFT is ERC721, ERC2981 {
         internal pure returns (string memory)
     {
         return string.concat(
-            _trait("Unit Number",       p.unitNumber.toString()),
-            ',', _trait("Seed",         p.seed.toString()),
+            _traitNumeric("Unit Number", p.unitNumber.toString()),
+            ',', _traitNumeric("Seed",   p.seed.toString()),
             ',', _trait("Orientation",  p.orientation == 0 ? "Portrait" : "Landscape"),
             ',', _trait("Imagination",  _formatImagination(p.imagination)),
             ',', _trait("Event",        p.eventName),
@@ -176,6 +176,14 @@ contract BalloonsNFT is ERC721, ERC2981 {
     {
         return string.concat(
             '{"trait_type":"', traitType, '","value":"', value, '"}'
+        );
+    }
+
+    function _traitNumeric(string memory traitType, string memory value)
+        internal pure returns (string memory)
+    {
+        return string.concat(
+            '{"trait_type":"', traitType, '","value":', value, '}'
         );
     }
 
