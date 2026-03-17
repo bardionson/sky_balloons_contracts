@@ -263,6 +263,24 @@ contract MetadataAssemblyTest is Test {
     }
 
     // -------------------------------------------------------------------------
+    // Input validation
+    // -------------------------------------------------------------------------
+
+    function test_mintRevertsOnInvalidImagination() public {
+        sampleParams.imagination = 501; // out of range
+        vm.prank(minter);
+        vm.expectRevert("BN: imagination out of range");
+        balloons.mint(customer, sampleParams);
+    }
+
+    function test_mintRevertsOnInvalidOrientation() public {
+        sampleParams.orientation = 2; // invalid
+        vm.prank(minter);
+        vm.expectRevert("BN: invalid orientation");
+        balloons.mint(customer, sampleParams);
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 

@@ -100,9 +100,14 @@ contract BalloonsNFT is ERC721, ERC2981 {
     function mint(address to, MintParams calldata params)
         external onlyMinter whenNotPaused
     {
+        require(
+            params.imagination >= -200 && params.imagination <= 500,
+            "BN: imagination out of range"
+        );
+        require(params.orientation <= 1, "BN: invalid orientation");
         uint256 tokenId = _nextTokenId++;
-        _safeMint(to, tokenId);
         _params[tokenId] = params;
+        _safeMint(to, tokenId);
     }
 
     // -------------------------------------------------------------------------
