@@ -95,10 +95,11 @@ contract InstallationContract {
     }
 
     receive() external payable {
-        if (isPreSale()) {
+        address deedHolder = deedContract.ownerOf(0);
+        if (deedHolder == ARTIST) {
             _allocatePreSale(msg.value);
         } else {
-            _allocatePostSale(msg.value);
+            _allocatePostSale(msg.value, deedHolder);
         }
     }
 
@@ -110,8 +111,7 @@ contract InstallationContract {
         balances[ARTIST]         += endowmentCut + artistCut;
     }
 
-    function _allocatePostSale(uint256 amount) internal {
-        address deedHolder = deedContract.ownerOf(0);
+    function _allocatePostSale(uint256 amount, address deedHolder) internal {
         uint256 galleryCut        = amount * postSaleGalleryBps / 10000;
         uint256 endowmentCut      = amount * postSaleEndowmentBps / 10000;
         uint256 artistCut         = amount * postSaleArtistBps / 10000;
@@ -145,10 +145,10 @@ contract InstallationContract {
     function setCollectorVenue(address venue, uint256 bps)
         external onlyDeedHolder onlyPostSale
     {
-        require(bps <= postSaleEndowmentBps, "IC: exceeds endowment share");
         if (collectorVenueAddress != address(0)) {
-            postSaleEndowmentBps += collectorVenueBps;
+            postSaleEndowmentBps += collectorVenueBps; // restore old allocation first
         }
+        require(bps <= postSaleEndowmentBps, "IC: exceeds endowment share");
         collectorVenueAddress = venue;
         collectorVenueBps     = bps;
         postSaleEndowmentBps  -= bps;
@@ -157,10 +157,10 @@ contract InstallationContract {
     function setArtistVenue(address venue, uint256 bps)
         external onlyArtist onlyPostSale
     {
-        require(bps <= postSaleArtistBps, "IC: exceeds artist share");
         if (artistVenueAddress != address(0)) {
-            postSaleArtistBps += artistVenueBps;
+            postSaleArtistBps += artistVenueBps; // restore old allocation first
         }
+        require(bps <= postSaleArtistBps, "IC: exceeds artist share");
         artistVenueAddress = venue;
         artistVenueBps     = bps;
         postSaleArtistBps  -= bps;
