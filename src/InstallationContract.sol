@@ -114,9 +114,14 @@ contract InstallationContract {
     function _allocatePostSale(uint256 amount, address deedHolder) internal {
         uint256 galleryCut        = amount * postSaleGalleryBps / 10000;
         uint256 endowmentCut      = amount * postSaleEndowmentBps / 10000;
-        uint256 artistCut         = amount * postSaleArtistBps / 10000;
         uint256 collectorVenueCut = amount * collectorVenueBps / 10000;
         uint256 artistVenueCut    = amount * artistVenueBps / 10000;
+        // Artist captures remainder to prevent unclaimable dust from integer division
+        uint256 artistCut         = amount
+            - galleryCut
+            - endowmentCut
+            - collectorVenueCut
+            - artistVenueCut;
         balances[galleryAddress] += galleryCut;
         balances[deedHolder]     += endowmentCut;
         balances[ARTIST]         += artistCut;
@@ -142,6 +147,10 @@ contract InstallationContract {
         preSaleEndowmentBps = bps;
     }
 
+    /// @notice Deed holder sets or replaces the collector venue.
+    /// @dev Replacing the venue address does not zero the old venue's accrued
+    ///      balance — the old venue retains its earned funds and may still call
+    ///      withdraw(). Only future ETH flows to the new address.
     function setCollectorVenue(address venue, uint256 bps)
         external onlyDeedHolder onlyPostSale
     {
@@ -154,6 +163,10 @@ contract InstallationContract {
         postSaleEndowmentBps  -= bps;
     }
 
+    /// @notice Artist sets or replaces the artist venue.
+    /// @dev Replacing the venue address does not zero the old venue's accrued
+    ///      balance — the old venue retains its earned funds and may still call
+    ///      withdraw(). Only future ETH flows to the new address.
     function setArtistVenue(address venue, uint256 bps)
         external onlyArtist onlyPostSale
     {

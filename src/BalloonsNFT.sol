@@ -146,7 +146,7 @@ contract BalloonsNFT is ERC721, ERC2981 {
             tokenId.toString(),
             ' \u2014 ',
             p.uniqueName,
-            '","description":"Balloons in the Sky by B\xC3\xA5rd Ionson & Jennifer Ionson"',
+            '","description":"Balloons in the Sky by B\u00e5rd Ionson & Jennifer Ionson"',
             ',"image":"ipfs://',
             p.cid,
             '","license":"CC BY-NC 4.0"',
@@ -196,6 +196,7 @@ contract BalloonsNFT is ERC721, ERC2981 {
     ///      75 → "0.75" | -150 → "-1.50" | 500 → "5.00" | -200 → "-2.00"
     function _formatImagination(int256 val) internal pure returns (string memory) {
         bool negative = val < 0;
+        // safe: imagination is validated to [-200, 500] in mint(), so int256.min is unreachable
         uint256 abs   = negative ? uint256(-val) : uint256(val);
         uint256 whole = abs / 100;
         uint256 frac  = abs % 100;

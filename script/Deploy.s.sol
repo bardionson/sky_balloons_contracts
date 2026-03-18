@@ -32,6 +32,10 @@ contract Deploy is Script {
         require(ARTIST_ADDRESS  != address(0), "Set ARTIST_ADDRESS");
         require(GALLERY_ADDRESS != address(0), "Set GALLERY_ADDRESS");
         require(MINTER_ADDRESS  != address(0), "Set MINTER_ADDRESS");
+        require(
+            keccak256(bytes(DEED_METADATA_URI)) != keccak256(bytes("ipfs://REPLACE_WITH_DEED_METADATA_CID")),
+            "Set DEED_METADATA_URI"
+        );
 
         vm.startBroadcast();
 
