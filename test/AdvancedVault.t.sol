@@ -306,4 +306,94 @@ contract AdvancedVaultTest is Test {
         installation.setExhibitionOperator(venue1);
         assertEq(installation.exhibitionOperator(), venue1);
     }
+
+    // -----------------------------------------------------------------------
+    // Section 4: Vault Solvency Invariants
+    // -----------------------------------------------------------------------
+
+    function testFuzz_vaultSolvency(uint256 amount) public {
+        amount = bound(amount, 1, 100 ether);
+
+        // Send ETH pre-sale
+        vm.deal(address(this), amount);
+        (bool ok,) = address(installation).call{value: amount}("");
+        assertTrue(ok);
+
+        // Contract holds exactly what was sent
+        assertEq(address(installation).balance, amount);
+
+        // Sum of all credited balances equals contract balance
+        uint256 sumBalances = installation.balances(gallery) + installation.balances(artist);
+        assertEq(address(installation).balance, sumBalances);
+
+        // After artist withdraws, solvency still holds
+        uint256 artistShare = installation.balances(artist);
+        vm.prank(artist);
+        installation.withdraw();
+
+        assertEq(address(installation).balance, amount - artistShare);
+        assertEq(address(installation).balance, installation.balances(gallery));
+    }
+
+    function testFuzz_vaultSolvencyPostSale(uint256 amount) public {
+        amount = bound(amount, 1, 100 ether);
+
+        vm.prank(artist);
+        deed.transferFrom(artist, collector, 0);
+
+        vm.deal(address(this), amount);
+        (bool ok,) = address(installation).call{value: amount}("");
+        assertTrue(ok);
+
+        uint256 sumBalances = installation.balances(gallery)
+            + installation.balances(collector)
+            + installation.balances(artist);
+        assertEq(address(installation).balance, sumBalances);
+    }
+
+    // -----------------------------------------------------------------------
+    // Section 5: Withdrawal Isolation
+    // -----------------------------------------------------------------------
+
+    function test_withdrawalDoesNotAffectOtherBalances() public {
+        vm.deal(address(this), 1 ether);
+        (bool ok,) = address(installation).call{value: 1 ether}("");
+        assertTrue(ok);
+
+        uint256 galleryBalanceBefore  = installation.balances(gallery);
+        uint256 artistBalanceBefore   = installation.balances(artist);
+
+        assertGt(galleryBalanceBefore, 0);
+        assertGt(artistBalanceBefore, 0);
+
+        // Artist withdraws
+        vm.prank(artist);
+        installation.withdraw();
+
+        // Gallery balance completely unaffected
+        assertEq(installation.balances(gallery), galleryBalanceBefore);
+        // Artist balance is now zero
+        assertEq(installation.balances(artist), 0);
+    }
+
+    function test_withdrawalIsolationPostSale() public {
+        vm.prank(artist);
+        deed.transferFrom(artist, collector, 0);
+
+        vm.deal(address(this), 1 ether);
+        (bool ok,) = address(installation).call{value: 1 ether}("");
+        assertTrue(ok);
+
+        uint256 galleryShare   = installation.balances(gallery);
+        uint256 collectorShare = installation.balances(collector);
+        uint256 artistShare    = installation.balances(artist);
+
+        // Collector withdraws — gallery and artist unaffected
+        vm.prank(collector);
+        installation.withdraw();
+
+        assertEq(installation.balances(gallery),   galleryShare);
+        assertEq(installation.balances(artist),    artistShare);
+        assertEq(installation.balances(collector), 0);
+    }
 }

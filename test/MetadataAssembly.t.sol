@@ -281,6 +281,109 @@ contract MetadataAssemblyTest is Test {
     }
 
     // -------------------------------------------------------------------------
+    // Imagination fuzz
+    // -------------------------------------------------------------------------
+
+    function testFuzz_imaginationFormatNeverPanics(int256 raw) public {
+        raw = bound(raw, -200, 500);
+        sampleParams.imagination = raw;
+        vm.prank(minter);
+        balloons.mint(customer, sampleParams);
+
+        // tokenURI must not revert and must contain a dot (decimal format)
+        string memory uri = balloons.tokenURI(0);
+        assertTrue(_startsWith(uri, "data:application/json;base64,"));
+
+        // Decoded JSON must contain a decimal point (float format)
+        string memory decoded = _decodeTokenURI(uri);
+        assertTrue(_contains(decoded, "."));
+    }
+
+    function testFuzz_imaginationOutOfRangeReverts(int256 raw) public {
+        // Bound to values strictly outside [-200, 500]
+        if (raw >= -200 && raw <= 500) return; // skip valid range
+        sampleParams.imagination = raw;
+        vm.prank(minter);
+        vm.expectRevert("BN: imagination out of range");
+        balloons.mint(customer, sampleParams);
+    }
+
+    // -------------------------------------------------------------------------
+    // Multi-token parameter isolation
+    // -------------------------------------------------------------------------
+
+    function test_multipleTokensHaveIsolatedParams() public {
+        // Mint token 0
+        BalloonsNFT.MintParams memory p0 = BalloonsNFT.MintParams({
+            uniqueName:      "Token Zero",
+            unitNumber:      0,
+            seed:            111,
+            timestamp:       "01/01/2026 10:00 CET",
+            orientation:     0,
+            imagination:     0,
+            cid:             "QmCID0",
+            eventName:       "Event A",
+            pieceType:       "Edition",
+            pixelDimensions: "1920x1080"
+        });
+        vm.prank(minter);
+        balloons.mint(customer, p0);
+
+        // Mint token 1
+        BalloonsNFT.MintParams memory p1 = BalloonsNFT.MintParams({
+            uniqueName:      "Token One",
+            unitNumber:      1,
+            seed:            222,
+            timestamp:       "02/01/2026 11:00 CET",
+            orientation:     1,
+            imagination:     200,
+            cid:             "QmCID1",
+            eventName:       "Event B",
+            pieceType:       "Artist Proof",
+            pixelDimensions: "3840x2160"
+        });
+        vm.prank(minter);
+        balloons.mint(customer, p1);
+
+        // Mint token 2
+        BalloonsNFT.MintParams memory p2 = BalloonsNFT.MintParams({
+            uniqueName:      "Token Two",
+            unitNumber:      2,
+            seed:            333,
+            timestamp:       "03/01/2026 12:00 CET",
+            orientation:     0,
+            imagination:     -100,
+            cid:             "QmCID2",
+            eventName:       "Event C",
+            pieceType:       "Edition",
+            pixelDimensions: "1080x1920"
+        });
+        vm.prank(minter);
+        balloons.mint(customer, p2);
+
+        // Each token URI contains only its own data
+        assertTrue(_containsInURI(0, "Token Zero"));
+        assertTrue(_containsInURI(0, "QmCID0"));
+        assertTrue(_containsInURI(0, "Event A"));
+        assertFalse(_containsInURI(0, "Token One"));
+        assertFalse(_containsInURI(0, "Token Two"));
+
+        assertTrue(_containsInURI(1, "Token One"));
+        assertTrue(_containsInURI(1, "QmCID1"));
+        assertTrue(_containsInURI(1, "Landscape"));
+        assertTrue(_containsInURI(1, "2.00"));
+        assertFalse(_containsInURI(1, "Token Zero"));
+        assertFalse(_containsInURI(1, "Token Two"));
+
+        assertTrue(_containsInURI(2, "Token Two"));
+        assertTrue(_containsInURI(2, "QmCID2"));
+        assertTrue(_containsInURI(2, "Portrait"));
+        assertTrue(_containsInURI(2, "-1.00"));
+        assertFalse(_containsInURI(2, "Token Zero"));
+        assertFalse(_containsInURI(2, "Token One"));
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
