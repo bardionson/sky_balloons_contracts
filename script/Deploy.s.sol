@@ -18,7 +18,7 @@ contract Deploy is Script {
 
     address constant ARTIST_ADDRESS   = 0x2167DB9C3bfdCA18FEaE891a5c5F7713DcD3171b; // Sepolia test: artist wallet
     address constant GALLERY_ADDRESS  = 0xEA1ac22F0833dB1f17FFA8eBCdaF702521052472; // Sepolia test: gallery stand-in
-    address constant MINTER_ADDRESS   = 0x0A772399c89763D331D121236ADD4D6AecEfB134; // Sepolia test: minter stand-in
+    address constant MINTER_ADDRESS   = 0x0A772399c89763D331D121236ADD4D6AecEfB134; // Sepolia test: minter stand-in (replace with Crossmint wallet post-registration)
 
     string constant DEED_METADATA_URI = "ipfs://bafybeiabc123placeholder"; // Sepolia test: placeholder CID
 

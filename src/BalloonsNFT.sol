@@ -110,6 +110,40 @@ contract BalloonsNFT is ERC721, ERC2981 {
         _safeMint(to, tokenId);
     }
 
+    /// @notice Crossmint-compatible flat mint — same logic as mint() but with
+    ///         individual parameters instead of a struct, so Crossmint's console
+    ///         and API can parse and call it without tuple/struct support.
+    function mintFlat(
+        address         to,
+        string calldata uniqueName,
+        uint256         unitNumber,
+        uint256         seed,
+        string calldata timestamp,
+        uint256         orientation,
+        int256          imagination,
+        string calldata cid,
+        string calldata eventName,
+        string calldata pieceType,
+        string calldata pixelDimensions
+    ) external onlyMinter whenNotPaused {
+        require(imagination >= -200 && imagination <= 500, "BN: imagination out of range");
+        require(orientation <= 1, "BN: invalid orientation");
+        uint256 tokenId = _nextTokenId++;
+        _params[tokenId] = MintParams({
+            uniqueName:      uniqueName,
+            unitNumber:      unitNumber,
+            seed:            seed,
+            timestamp:       timestamp,
+            orientation:     orientation,
+            imagination:     imagination,
+            cid:             cid,
+            eventName:       eventName,
+            pieceType:       pieceType,
+            pixelDimensions: pixelDimensions
+        });
+        _safeMint(to, tokenId);
+    }
+
     // -------------------------------------------------------------------------
     // Admin
     // -------------------------------------------------------------------------
