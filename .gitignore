@@ -1,0 +1,15 @@
+# Foundry build artifacts
+/out
+/cache
+/broadcast
+
+# Environment — never commit secrets
+.env
+.env.*
+!.env.example
+
+# Local Foundry keystore
+/keystore
+
+# OS
+.DS_Store
